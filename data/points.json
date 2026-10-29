@@ -1,0 +1,35 @@
+{
+  "police_boss": {
+    "label": "Police management",
+    "type": "job",
+    "owner": "police",
+    "coords": {
+      "x": 447.9,
+      "y": -973.3,
+      "z": 30.69
+    },
+    "radius": 1.5
+  },
+  "ambulance_boss": {
+    "label": "EMS management",
+    "type": "job",
+    "owner": "ambulance",
+    "coords": {
+      "x": 335.5,
+      "y": -594.4,
+      "z": 43.28
+    },
+    "radius": 1.5
+  },
+  "mechanic_boss": {
+    "label": "Mechanic management",
+    "type": "job",
+    "owner": "mechanic",
+    "coords": {
+      "x": -347.4,
+      "y": -133.3,
+      "z": 39.01
+    },
+    "radius": 1.5
+  }
+}
