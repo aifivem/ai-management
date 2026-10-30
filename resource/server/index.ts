@@ -34,8 +34,8 @@ const gradeOf = (source: number, point: BossPoint): number | null =>
 /** The grades of a point's job / gang (one definitions copy from ai-core per call: ask once per action). */
 const gradesOf = (point: BossPoint) =>
   (point.type === "job"
-    ? core.GetJobDefinitions()[point.owner]?.grades
-    : core.GetGangDefinitions()[point.owner]?.grades) ?? [];
+    ? core.GetJobDefinition(point.owner)?.grades
+    : core.GetGangDefinition(point.owner)?.grades) ?? [];
 
 interface Boss {
   point: BossPoint;
