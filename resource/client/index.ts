@@ -1,4 +1,4 @@
-import { AdminWorld, cache, hidePrompt, input, loadLocaleTexts, menu, notify, onPromptPressed, showPrompt, triggerServerCallback, Zones } from "@aicore-fivem/lib/client";
+import { AdminWorld, cache, input, loadLocaleTexts, menu, notify, Points, triggerServerCallback } from "@aicore-fivem/lib/client";
 import { record } from "@aicore-fivem/lib/shared";
 import { Locale } from "common";
 import { EVENTS, readPoints } from "common/boss";
@@ -68,16 +68,11 @@ async function openBoss(id: string): Promise<void> {
   }
 }
 
-const zones = new Zones();
+const points = new Points();
 function rebuild(): void {
-  zones.clear();
-  for (const point of readPoints(world.get("points")).values()) {
-    const id = `boss:${point.id}`;
-    zones.add(id, { shape: { type: "sphere", center: point, radius: point.radius }, interval: 500, onEnter: () => showPrompt(id, Locale("BOSS_PROMPT", point.label)), onExit: () => hidePrompt(id) });
-  }
+  points.clear();
+  for (const point of readPoints(world.get("points")).values())
+    points.add(`boss:${point.id}`, { coords: { x: point.x, y: point.y, z: point.z }, label: Locale("BOSS_PROMPT", point.label), icon: "briefcase", radius: point.radius, onPressed: () => openBoss(point.id) });
 }
 rebuild();
 world.onChange("points", rebuild);
-onPromptPressed((id) => {
-  if (id.startsWith("boss:")) void openBoss(id.slice(5));
-});
