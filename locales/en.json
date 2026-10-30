@@ -24,7 +24,7 @@
   "ADMIN_TAB_POINTS": "Boss points",
   "ADMIN_TAB_POINTS_DESC": "Where the boss of a job or gang hires, promotes, fires and runs the account.",
   "ADMIN_NEW_POINT": "New boss point",
-  "ADMIN_DELETE_POINT": "Delete this boss point?",
+  "ADMIN_DELETE_POINT": "Delete boss point",
   "ADMIN_C_POINT": "Boss point",
   "ADMIN_C_POINT_DESC": "Members with a boss grade open the menu here.",
   "ADMIN_F_LABEL": "Name",
