@@ -1,4 +1,5 @@
 {
+  "$schema": "./schemas/points.schema.json",
   "police_boss": {
     "label": "Police management",
     "type": "job",
