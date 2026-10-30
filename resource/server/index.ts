@@ -29,10 +29,8 @@ aiLogChannels({ management: {} });
 
 const gradeOf = (source: number, point: BossPoint): number | null =>
   point.type === "job"
-    ? ((core.GetJobs(source) ?? []).find((m) => m.job === point.owner)?.grade ??
-      null)
-    : ((core.GetGangs(source) ?? []).find((m) => m.gang === point.owner)
-        ?.grade ?? null);
+    ? online.jobGrade(source, point.owner)
+    : online.gangGrade(source, point.owner);
 /** The grades of a point's job / gang (one definitions copy from ai-core per call: ask once per action). */
 const gradesOf = (point: BossPoint) =>
   (point.type === "job"
@@ -72,12 +70,12 @@ onClientCallback(
     const boss = bossAt(source, id);
     if (!boss) return fail("BOSS_ERR_DENIED");
     const { point } = boss;
-    // Members come from the local mirror; only they cost an ai-core call (their grade).
-    const isMember = (s: number) =>
-      (point.type === "job" ? online.jobs(s) : online.gangs(s)).includes(
-        point.owner,
-      );
-    const members = [...online.sources()].filter(isMember).flatMap((s) => {
+    // Members and their grades come from lib `online`'s member set of the job / gang: no export per member.
+    const memberSet =
+      point.type === "job"
+        ? online.jobMembers(point.owner)
+        : online.gangMembers(point.owner);
+    const members = [...memberSet].flatMap((s) => {
       const grade = gradeOf(s, point);
       const c = online.character(s);
       return grade !== null && c
