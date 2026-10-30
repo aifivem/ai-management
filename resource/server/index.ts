@@ -1,4 +1,4 @@
-import { AdminPanel, aiLog, aiLogChannels, notify, onClientCallback, resourceExport } from "@aicore-fivem/lib/server";
+import { AdminPanel, aiLog, aiLogChannels, notify, onClientCallback, online, resourceExport } from "@aicore-fivem/lib/server";
 import type { PanelSchema } from "@aicore-fivem/shared";
 import { Locale } from "common";
 import { EVENTS, readPoints, type BossPoint, type BossView } from "common/boss";
@@ -84,9 +84,11 @@ function bossAt(source: number, id: string): BossPoint | null {
 onClientCallback(EVENTS.view, { args: ([id]) => (typeof id === "string" ? [id] : null) }, (source, id): BossView | ReturnType<typeof fail> => {
   const point = bossAt(source, id);
   if (!point) return fail("BOSS_ERR_DENIED");
-  const members = core.GetLoadedSources().flatMap((s) => {
+  // Members come from the local mirror; only they cost an ai-core call (their grade).
+  const isMember = (s: number) => (point.type === "job" ? online.jobs(s) : online.gangs(s)).includes(point.owner);
+  const members = [...online.sources()].filter(isMember).flatMap((s) => {
     const grade = gradeOf(s, point);
-    const c = core.GetCharacter(s);
+    const c = online.character(s);
     return grade !== null && c ? [{ id: s, name: `${c.firstname} ${c.lastname}`, grade }] : [];
   });
   return { ok: true, label: point.label, balance: core.GetSharedMoney(point.type, point.owner, "bank") ?? 0, grades: gradesOf(point).map((g) => g.label), members };
