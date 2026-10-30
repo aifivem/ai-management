@@ -40,8 +40,23 @@ function str(value, fallback, max = 64) {
 function record(value) {
 	return typeof value == "object" && value && !Array.isArray(value) ? value : {};
 }
-// ../../../packages/lib/src/shared/records.ts
-const isObject = (value) => typeof value == "object" && !!value && !Array.isArray(value);
+// ../../../packages/lib/src/shared/strict.ts
+function readInt(value, min, max) {
+	return Number.isInteger(value) && value >= min && value <= max ? value : null;
+}
+const readId = (value) => readInt(value, 1, 2147483647);
+function readText(value, max) {
+	if (typeof value != "string") return null;
+	let text = value.trim();
+	return text ? text.slice(0, max) : null;
+}
+const oneArg = (read) => ([value]) => {
+	let parsed = read(value);
+	return parsed === null ? null : [parsed];
+}, fail = (error) => ({
+	ok: !1,
+	error
+}), isObject = (value) => typeof value == "object" && !!value && !Array.isArray(value);
 function readRecords(raw, readOne) {
 	let out = new Map();
 	if (!isObject(raw)) return out;
@@ -208,7 +223,7 @@ const CORE = {
 	clientPlayerLoadedEvent: "ai-core:client:playerLoaded",
 	clientPlayerUnloadedEvent: "ai-core:client:playerUnloaded",
 	clientCharacterPortraitEvent: "ai-core:client:characterPortrait",
-	clientCharacterLookEvent: "ai-core:client:characterLook",
+	characterLooksEvent: "ai-core:client:characterLooks",
 	clientPromptPressedEvent: "ai-core:client:promptPressed",
 	clientCacheEvent: "ai-core:client:cache",
 	clientHudVisibleEvent: "ai-core:client:hudVisible",
@@ -269,6 +284,20 @@ function loadLocaleTexts(resource = GetCurrentResourceName()) {
 }
 // ../../../packages/lib/src/fivem/callbackNames.ts
 const requestEvent = (name) => `aicore:cb:${name}`, responseEvent = (resource) => `aicore:cbr:${resource}`;
+// ../../../packages/lib/src/server/position.ts
+function entityCoords(entity) {
+	let [x = 0, y = 0, z = 0] = GetEntityCoords(entity);
+	return {
+		x,
+		y,
+		z
+	};
+}
+const coordsOf = (source) => entityCoords(GetPlayerPed(String(source)));
+function isNear(source, point, metres) {
+	let [x = 0, y = 0, z = 0] = GetEntityCoords(GetPlayerPed(String(source))), dx = x - point.x, dy = y - point.y, dz = z - point.z;
+	return dx * dx + dy * dy + dz * dz <= metres * metres;
+}
 resourceExport(CORE.resource);
 const log$5 = createLogger(GetCurrentResourceName()), gates = new Set();
 on("playerDropped", () => {
@@ -378,7 +407,7 @@ function toPatch(value) {
 		default: return null;
 	}
 }
-const clone = (value) => value === void 0 ? value : JSON.parse(JSON.stringify(value)), core$14 = resourceExport(CORE.resource), ERR = {
+const clone = (value) => value === void 0 ? value : JSON.parse(JSON.stringify(value)), core$15 = resourceExport(CORE.resource), ERR = {
 	type: "ADMIN_ERR_TYPE",
 	range: "ADMIN_ERR_RANGE",
 	length: "ADMIN_ERR_LENGTH",
@@ -392,7 +421,7 @@ const clone = (value) => value === void 0 ? value : JSON.parse(JSON.stringify(va
 		if (cached && Date.now() - cached.at < 2e3) return cached.values.size > 0 ? cached.values : null;
 		let list = [];
 		try {
-			list = core$14.GetLookupValues(source);
+			list = core$15.GetLookupValues(source);
 		} catch {}
 		let values = new Set(Array.isArray(list) ? list.filter((v) => typeof v == "string") : []);
 		return this.lists.set(source, {
@@ -595,7 +624,7 @@ function writeSchema(resource, name, text, log) {
 	(0, node_fs_promises.mkdir)(dir, { recursive: !0 }).then(() => (0, node_fs_promises.writeFile)(`${dir}/${name}.schema.json`, text, "utf8")).catch((error) => log.error(`writing ${resource}/${path} failed`, error));
 }
 // ../../../packages/lib/src/server/admin/panel.ts
-const core$13 = resourceExport(CORE.resource), DEFAULT_KEY = "^[a-z0-9_]{2,32}$";
+const core$14 = resourceExport(CORE.resource), DEFAULT_KEY = "^[a-z0-9_]{2,32}$";
 function imported(spec, value) {
 	let base = clone(spec.newRecord ?? {}), out = {};
 	for (let name of Object.keys(spec.sections)) {
@@ -619,7 +648,7 @@ var AdminPanel = class {
 	constructor(schema) {
 		this.schema = schema;
 		for (let [name, spec] of Object.entries(schema.files)) this.load(name, spec);
-		registerExport("AdminPanelSnapshot", () => this.snapshot()), registerExport("AdminPanelApply", (admin, patch) => this.apply(admin, patch)), onClientCallback(ADMIN.worldChangesCallback(this.resource), () => Object.fromEntries(this.worldChanges)), setImmediate(() => core$13.RegisterAdminPanel(this.resource));
+		registerExport("AdminPanelSnapshot", () => this.snapshot()), registerExport("AdminPanelApply", (admin, patch) => this.apply(admin, patch)), onClientCallback(ADMIN.worldChangesCallback(this.resource), () => Object.fromEntries(this.worldChanges)), setImmediate(() => core$14.RegisterAdminPanel(this.resource));
 	}
 	get(file) {
 		return this.data.get(file) ?? {};
@@ -753,7 +782,7 @@ var AdminPanel = class {
 		let spec = this.schema.files[file], data = this.get(file), value = key === void 0 ? data : data[key] ?? null;
 		this.dataFiles.get(file)?.write(data), this.views.changed(file, key, value);
 		for (let handler of this.handlers.get(file) ?? []) handler(key, value);
-		if (core$13.AdminPanelChanged({
+		if (core$14.AdminPanelChanged({
 			resource: this.resource,
 			file,
 			key,
@@ -792,7 +821,7 @@ function notify(source, text, kind = "info", duration) {
 }
 resourceExport(CORE.resource);
 // ../../../packages/lib/src/server/online.ts
-const core$11 = resourceExport(CORE.resource);
+const core$12 = resourceExport(CORE.resource);
 var OnlinePlayers = class {
 	players = new Map();
 	onDuty = new Map();
@@ -801,7 +830,7 @@ var OnlinePlayers = class {
 		if (this.started) return;
 		this.started = !0;
 		let load = (source, character) => {
-			this.put(source, character, (core$11.GetJobs(source) ?? []).map((m) => m.job), (core$11.GetGangs(source) ?? []).map((m) => m.gang)), this.setDuty(source, core$11.GetDutyJob(source));
+			this.put(source, character, (core$12.GetJobs(source) ?? []).map((m) => m.job), (core$12.GetGangs(source) ?? []).map((m) => m.gang)), this.setDuty(source, core$12.GetDutyJob(source));
 		};
 		on(CORE.playerLoadedEvent, load), on(CORE.playerUnloadedEvent, (source) => this.drop(source)), on(CORE.jobsChangedEvent, (source, jobs) => {
 			let player = this.players.get(source);
@@ -810,8 +839,8 @@ var OnlinePlayers = class {
 			let player = this.players.get(source);
 			player && (player.gangs = gangs.map((m) => m.gang));
 		}), on(CORE.dutyChangedEvent, (source, job) => this.setDuty(source, job));
-		for (let source of core$11.GetLoadedSources()) {
-			let character = core$11.GetCharacter(source);
+		for (let source of core$12.GetLoadedSources()) {
+			let character = core$12.GetCharacter(source);
 			character && load(source, character);
 		}
 	}
@@ -883,7 +912,10 @@ createLogger(resource), new class {
 			if (name === resource) for (let command of this.list) for (let n of command.info.names) emitNet("chat:removeSuggestion", -1, `/${n}`);
 		});
 	}
-}(), createLogger(GetCurrentResourceName()), createLogger("aicore-lib"), IsDuplicityVersion(), resourceExport(CORE.resource), resourceExport(CORE.resource), resourceExport(CORE.resource), resourceExport(CORE.resource), resourceExport(CORE.resource), resourceExport(CORE.resource), resourceExport(CORE.resource), resourceExport(CORE.resource);
+}(), createLogger(GetCurrentResourceName()), createLogger("aicore-lib"), IsDuplicityVersion(), resourceExport(CORE.resource), resourceExport(CORE.resource), resourceExport(CORE.resource);
+// ../../../packages/lib/src/server/money.ts
+const core$6 = resourceExport(CORE.resource), money = { transfer: (from, to, amount, reason, fee) => core$6.TransferMoney(from, to, amount, reason, fee) };
+resourceExport(CORE.resource), resourceExport(CORE.resource), resourceExport(CORE.resource), resourceExport(CORE.resource), resourceExport(CORE.resource);
 // resource/common/locale.ts
 const Locale = createLocale();
 GetCurrentResourceName(), IsDuplicityVersion();
@@ -893,25 +925,21 @@ const EVENTS = {
 	member: "ai-management:member",
 	money: "ai-management:money"
 };
-function readPoints(raw) {
-	let out = new Map();
-	for (let [id, value] of Object.entries(record(raw))) {
-		let v = record(value), c = record(v.coords), owner = str(v.owner, "", 32);
-		owner && out.set(id, {
-			id,
-			label: str(v.label, id, 48),
-			type: v.type === "gang" ? "gang" : "job",
-			owner,
-			x: num(c.x, 0),
-			y: num(c.y, 0),
-			z: num(c.z, 0),
-			radius: num(v.radius, 1.5, .5, 10)
-		});
-	}
-	return out;
+function readPoint(id, v) {
+	let c = record(v.coords), owner = str(v.owner, "", 32);
+	return owner ? {
+		id,
+		label: str(v.label, id, 48),
+		type: v.type === "gang" ? "gang" : "job",
+		owner,
+		x: num(c.x, 0),
+		y: num(c.y, 0),
+		z: num(c.z, 0),
+		radius: num(v.radius, 1.5, .5, 10)
+	} : null;
 }
-// resource/server/index.ts
-const core = resourceExport("ai-core"), panel = new AdminPanel({
+// resource/server/schema.ts
+const schema = {
 	title: "ADMIN_TITLE",
 	icon: "briefcase",
 	files: { points: {
@@ -1011,24 +1039,26 @@ const core = resourceExport("ai-core"), panel = new AdminPanel({
 			]
 		}]
 	}]
-}), content = { points: readPoints(panel.get("points")) };
-panel.onChange("points", () => content.points = readPoints(panel.get("points"))), aiLogChannels({ management: {} });
-const fail = (error) => ({
-	ok: !1,
-	error
-}), gradeOf = (source, point) => point.type === "job" ? (core.GetJobs(source) ?? []).find((m) => m.job === point.owner)?.grade ?? null : (core.GetGangs(source) ?? []).find((m) => m.gang === point.owner)?.grade ?? null, gradesOf = (point) => (point.type === "job" ? core.GetJobDefinitions()[point.owner]?.grades : core.GetGangDefinitions()[point.owner]?.grades) ?? [];
+}, core = resourceExport("ai-core"), content = { points: new AdminPanel(schema).records("points", readPoint) };
+aiLogChannels({ management: {} });
+const gradeOf = (source, point) => point.type === "job" ? (core.GetJobs(source) ?? []).find((m) => m.job === point.owner)?.grade ?? null : (core.GetGangs(source) ?? []).find((m) => m.gang === point.owner)?.grade ?? null, gradesOf = (point) => (point.type === "job" ? core.GetJobDefinitions()[point.owner]?.grades : core.GetGangDefinitions()[point.owner]?.grades) ?? [];
 function bossAt(source, id) {
 	let point = content.points.get(id);
-	if (!point) return null;
-	let [x = 0, y = 0, z = 0] = GetEntityCoords(GetPlayerPed(String(source)));
-	if (Math.hypot(x - point.x, y - point.y, z - point.z) > point.radius + 2) return null;
-	let grade = gradeOf(source, point);
-	return grade !== null && gradesOf(point)[grade]?.boss === !0 ? point : null;
+	if (!point || !isNear(source, point, point.radius + 2)) return null;
+	let own = gradeOf(source, point);
+	if (own === null) return null;
+	let grades = gradesOf(point);
+	return grades[own]?.boss === !0 ? {
+		point,
+		grades,
+		own
+	} : null;
 }
-onClientCallback(EVENTS.view, { args: ([id]) => typeof id == "string" ? [id] : null }, (source, id) => {
-	let point = bossAt(source, id);
-	if (!point) return fail("BOSS_ERR_DENIED");
-	let isMember = (s) => (point.type === "job" ? online.jobs(s) : online.gangs(s)).includes(point.owner), members = [...online.sources()].filter(isMember).flatMap((s) => {
+const reaches = (boss, grade) => grade < boss.own || boss.own === boss.grades.length - 1, pointArg = (v) => readText(v, 64);
+onClientCallback(EVENTS.view, { args: oneArg(pointArg) }, (source, id) => {
+	let boss = bossAt(source, id);
+	if (!boss) return fail("BOSS_ERR_DENIED");
+	let { point } = boss, isMember = (s) => (point.type === "job" ? online.jobs(s) : online.gangs(s)).includes(point.owner), members = [...online.sources()].filter(isMember).flatMap((s) => {
 		let grade = gradeOf(s, point), c = online.character(s);
 		return grade !== null && c ? [{
 			id: s,
@@ -1040,57 +1070,60 @@ onClientCallback(EVENTS.view, { args: ([id]) => typeof id == "string" ? [id] : n
 		ok: !0,
 		label: point.label,
 		balance: core.GetSharedMoney(point.type, point.owner, "bank") ?? 0,
-		grades: gradesOf(point).map((g) => g.label),
+		grades: boss.grades.map((g) => g.label),
 		members
 	};
 }), onClientCallback(EVENTS.member, {
-	args: ([id, action, target, grade]) => typeof id == "string" && (action === "hire" || action === "grade" || action === "fire") && typeof target == "number" ? [
-		id,
-		action,
-		target,
-		typeof grade == "number" ? grade : 0
-	] : null,
+	args: ([id, action, target, grade]) => {
+		let point = pointArg(id), who = readId(target), to = grade == null ? 0 : readInt(grade, 0, 100);
+		return point !== null && (action === "hire" || action === "grade" || action === "fire") && who !== null && to !== null ? [
+			point,
+			action,
+			who,
+			to
+		] : null;
+	},
 	lock: !0
 }, (source, id, action, target, grade) => {
-	let point = bossAt(source, id);
-	if (!point) return fail("BOSS_ERR_DENIED");
+	let boss = bossAt(source, id);
+	if (!boss) return fail("BOSS_ERR_DENIED");
+	let { point, grades } = boss;
 	if (target === source) return fail("BOSS_ERR_SELF");
-	if (!core.GetCharacter(target)) return fail("BOSS_ERR_TARGET");
-	let grades = gradesOf(point), own = gradeOf(source, point) ?? 0;
-	if (action !== "fire" && (grade < 0 || grade >= grades.length || grade > own)) return fail("BOSS_ERR_GRADE");
+	if (!online.character(target)) return fail("BOSS_ERR_TARGET");
+	if (action !== "fire" && (grade >= grades.length || !reaches(boss, grade))) return fail("BOSS_ERR_GRADE");
 	if (action === "fire" || action === "grade") {
 		let current = gradeOf(target, point);
 		if (current === null) return fail("BOSS_ERR_TARGET");
-		if (current > own) return fail("BOSS_ERR_GRADE");
+		if (!reaches(boss, current)) return fail("BOSS_ERR_GRADE");
 	}
-	if (action === "hire") {
-		let [x = 0, y = 0, z = 0] = GetEntityCoords(GetPlayerPed(String(source))), [tx = 0, ty = 0, tz = 0] = GetEntityCoords(GetPlayerPed(String(target)));
-		if (Math.hypot(x - tx, y - ty, z - tz) > 5) return fail("BOSS_ERR_TARGET");
-	}
-	return (action === "fire" ? point.type === "job" ? core.RemoveJob(target, point.owner) : core.RemoveGang(target, point.owner) : point.type === "job" ? core.SetJob(target, point.owner, grade) : core.SetGang(target, point.owner, grade)) ? (notify(target, Locale(action === "fire" ? "BOSS_FIRED" : action === "hire" ? "BOSS_HIRED" : "BOSS_GRADED", point.label, grades[grade]?.label ?? ""), "info", 8e3), aiLog("management", `${action} ${point.type}:${point.owner}`, {
+	return action === "hire" && !isNear(source, coordsOf(target), 5) || !(action === "fire" ? point.type === "job" ? core.RemoveJob(target, point.owner) : core.RemoveGang(target, point.owner) : point.type === "job" ? core.SetJob(target, point.owner, grade) : core.SetGang(target, point.owner, grade)) ? fail("BOSS_ERR_TARGET") : (notify(target, Locale(action === "fire" ? "BOSS_FIRED" : action === "hire" ? "BOSS_HIRED" : "BOSS_GRADED", point.label, grades[grade]?.label ?? ""), "info", 8e3), aiLog("management", `${action} ${point.type}:${point.owner}`, {
 		source,
 		target,
 		metadata: { grade }
-	}), { ok: !0 }) : fail("BOSS_ERR_TARGET");
+	}), { ok: !0 });
 }), onClientCallback(EVENTS.money, {
-	args: ([id, kind, amount]) => typeof id == "string" && (kind === "deposit" || kind === "withdraw") && typeof amount == "number" && Number.isInteger(amount) && amount > 0 ? [
-		id,
-		kind,
-		amount
-	] : null,
+	args: ([id, kind, amount]) => {
+		let point = pointArg(id), value = readInt(amount, 1, 1e9);
+		return point !== null && (kind === "deposit" || kind === "withdraw") && value !== null ? [
+			point,
+			kind,
+			value
+		] : null;
+	},
 	lock: !0
 }, (source, id, kind, amount) => {
-	let point = bossAt(source, id);
-	if (!point) return fail("BOSS_ERR_DENIED");
-	if (kind === "deposit") {
-		if (!core.RemoveMoney(source, "cash", amount, `society:${point.owner}`)) return fail("BOSS_ERR_MONEY");
-		core.AddSharedMoney(point.type, point.owner, "bank", amount, `deposit by ${source}`);
-	} else {
-		if (!core.RemoveSharedMoney(point.type, point.owner, "bank", amount, `withdraw by ${source}`)) return fail("BOSS_ERR_MONEY");
-		core.AddMoney(source, "cash", amount, `society:${point.owner}`);
-	}
-	return aiLog("management", `${kind} $${amount} on ${point.type}:${point.owner}`, {
+	let boss = bossAt(source, id);
+	if (!boss) return fail("BOSS_ERR_DENIED");
+	let { point } = boss, cash = {
+		source,
+		account: "cash"
+	}, group = {
+		owner: point.type,
+		id: point.owner,
+		account: "bank"
+	};
+	return (kind === "deposit" ? money.transfer(cash, group, amount, `society:${point.owner}:deposit`) : money.transfer(group, cash, amount, `society:${point.owner}:withdraw`)) ? (aiLog("management", `${kind} $${amount} on ${point.type}:${point.owner}`, {
 		source,
 		metadata: { amount }
-	}), { ok: !0 };
+	}), { ok: !0 }) : fail("BOSS_ERR_MONEY");
 });

@@ -33,23 +33,22 @@ export interface BossView {
   members: Array<{ id: number; name: string; grade: number }>;
 }
 
-export function readPoints(raw: unknown): Map<string, BossPoint> {
-  const out = new Map<string, BossPoint>();
-  for (const [id, value] of Object.entries(record(raw))) {
-    const v = record(value);
-    const c = record(v.coords);
-    const owner = str(v.owner, "", 32);
-    if (!owner) continue;
-    out.set(id, {
-      id,
-      label: str(v.label, id, 48),
-      type: v.type === "gang" ? "gang" : "job",
-      owner,
-      x: num(c.x, 0),
-      y: num(c.y, 0),
-      z: num(c.z, 0),
-      radius: num(v.radius, 1.5, 0.5, 10),
-    });
-  }
-  return out;
+/** One boss point record (`panel.records` / `world.records`); null without an owner. */
+export function readPoint(
+  id: string,
+  v: Record<string, unknown>,
+): BossPoint | null {
+  const c = record(v.coords);
+  const owner = str(v.owner, "", 32);
+  if (!owner) return null;
+  return {
+    id,
+    label: str(v.label, id, 48),
+    type: v.type === "gang" ? "gang" : "job",
+    owner,
+    x: num(c.x, 0),
+    y: num(c.y, 0),
+    z: num(c.z, 0),
+    radius: num(v.radius, 1.5, 0.5, 10),
+  };
 }
