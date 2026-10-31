@@ -5,9 +5,9 @@
     "type": "job",
     "owner": "police",
     "coords": {
-      "x": 447.9,
-      "y": -973.3,
-      "z": 30.69
+      "x": 447.16,
+      "y": -974.31,
+      "z": 30.47
     },
     "radius": 1.5
   },
@@ -16,9 +16,9 @@
     "type": "job",
     "owner": "ambulance",
     "coords": {
-      "x": 335.5,
-      "y": -594.4,
-      "z": 43.28
+      "x": 311.21,
+      "y": -599.36,
+      "z": 43.29
     },
     "radius": 1.5
   },
@@ -27,9 +27,20 @@
     "type": "job",
     "owner": "mechanic",
     "coords": {
-      "x": -347.4,
-      "y": -133.3,
+      "x": -347.59,
+      "y": -133.35,
       "z": 39.01
+    },
+    "radius": 1.5
+  },
+  "cardealer_boss": {
+    "label": "Car dealer management",
+    "type": "job",
+    "owner": "cardealer",
+    "coords": {
+      "x": -32.94,
+      "y": -1114.64,
+      "z": 26.42
     },
     "radius": 1.5
   }
