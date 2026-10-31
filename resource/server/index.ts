@@ -3,6 +3,7 @@ import {
   aiLog,
   aiLogChannels,
   coordsOf,
+  definitions,
   isNear,
   money,
   notify,
@@ -31,11 +32,11 @@ const gradeOf = (source: number, point: BossPoint): number | null =>
   point.type === "job"
     ? online.jobGrade(source, point.owner)
     : online.gangGrade(source, point.owner);
-/** The grades of a point's job / gang (one definitions copy from ai-core per call: ask once per action). */
+/** The grades of a point's job / gang. */
 const gradesOf = (point: BossPoint) =>
   (point.type === "job"
-    ? core.GetJobDefinition(point.owner)?.grades
-    : core.GetGangDefinition(point.owner)?.grades) ?? [];
+    ? definitions.job(point.owner)?.grades
+    : definitions.gang(point.owner)?.grades) ?? [];
 
 interface Boss {
   point: BossPoint;
