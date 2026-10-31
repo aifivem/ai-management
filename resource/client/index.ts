@@ -9,7 +9,7 @@ import {
   onMembershipChange,
   Points,
 } from "@aicore-fivem/lib/client";
-import { record, RecordObjects } from "@aicore-fivem/lib/shared";
+import { groupDigits, record, RecordObjects } from "@aicore-fivem/lib/shared";
 import { Locale } from "common";
 import { EVENTS, readPoint } from "common/boss";
 
@@ -46,10 +46,7 @@ async function openBoss(id: string): Promise<void> {
     items: [
       {
         id: "money",
-        label: Locale(
-          "BOSS_BALANCE",
-          Number(view.balance ?? 0).toLocaleString("en-US"),
-        ),
+        label: Locale("BOSS_BALANCE", groupDigits(Number(view.balance ?? 0))),
         icon: "wallet",
       },
       { id: "hire", label: Locale("BOSS_HIRE"), icon: "user" },
