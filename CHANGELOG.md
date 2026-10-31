@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/aifivem/ai-management/compare/v0.1.1...v0.1.2) (2026-10-31)
+
+
+### Miscellaneous Chores
+
+* rebuild with the current lib ([f6ef19e](https://github.com/aifivem/ai-management/commit/f6ef19eded2be8ffe6b046f21fb2a41eff6b7c5d))
+
 ## [0.1.1](https://github.com/aifivem/ai-management/compare/v0.1.0...v0.1.1) (2026-10-31)
 
 
