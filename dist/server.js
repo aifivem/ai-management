@@ -34,6 +34,9 @@ var SourceLock = class {
 function num(value, fallback, min = -Infinity, max = Infinity) {
 	return typeof value == "number" && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
 }
+function bool(value, fallback) {
+	return typeof value == "boolean" ? value : fallback;
+}
 function str(value, fallback, max = 64) {
 	return typeof value == "string" && value.trim() ? value.trim().slice(0, max) : fallback;
 }
@@ -56,7 +59,18 @@ const oneArg = (read) => ([value]) => {
 }, fail = (error) => ({
 	ok: !1,
 	error
-}), isPublic = (rule) => rule.jobs.length === 0 && rule.gangs.length === 0, isObject = (value) => typeof value == "object" && !!value && !Array.isArray(value);
+}), names = (v) => Array.isArray(v) ? v.filter((x) => typeof x == "string") : [];
+function readAccess(value) {
+	let v = record(value), grades = {};
+	for (let [name, grade] of Object.entries(record(v.grades))) typeof grade == "number" && Number.isInteger(grade) && grade >= 0 && (grades[name] = grade);
+	return {
+		jobs: names(v.jobs),
+		gangs: names(v.gangs),
+		grades,
+		onDuty: bool(v.onDuty, !1)
+	};
+}
+const isPublic = (rule) => rule.jobs.length === 0 && rule.gangs.length === 0, isObject = (value) => typeof value == "object" && !!value && !Array.isArray(value);
 function readRecords(raw, readOne) {
 	let out = new Map();
 	if (!isObject(raw)) return out;
@@ -1172,16 +1186,19 @@ const EVENTS = {
 };
 function readPoint(id, v) {
 	let c = record(v.coords), owner = str(v.owner, "", 32);
-	return owner ? {
+	if (!owner) return null;
+	let type = v.type === "gang" ? "gang" : "job";
+	return {
 		id,
 		label: str(v.label, id, 48),
-		type: v.type === "gang" ? "gang" : "job",
+		type,
 		owner,
 		x: num(c.x, 0),
 		y: num(c.y, 0),
 		z: num(c.z, 0),
-		radius: num(v.radius, 1.5, .5, 10)
-	} : null;
+		radius: num(v.radius, 1.5, .5, 10),
+		access: readAccess(type === "gang" ? { gangs: [owner] } : { jobs: [owner] })
+	};
 }
 // resource/server/schema.ts
 const schema = {

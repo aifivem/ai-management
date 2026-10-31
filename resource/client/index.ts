@@ -1,20 +1,19 @@
 import {
   AdminWorld,
+  allows,
   callAction,
-  getPlayerData,
   input,
   menu,
   nearestPlayer,
   notify,
-  onPlayerData,
+  onMembershipChange,
   Points,
 } from "@aicore-fivem/lib/client";
-import { record } from "@aicore-fivem/lib/shared";
+import { record, RecordObjects } from "@aicore-fivem/lib/shared";
 import { Locale } from "common";
-import { EVENTS, readPoint, type BossPoint } from "common/boss";
+import { EVENTS, readPoint } from "common/boss";
 
 const world = new AdminWorld(["points"]);
-const content = { points: world.records("points", readPoint) };
 const FALLBACK = { fallback: "BOSS_ERR_DENIED" };
 /** Runs a boss action; the server's refusal shows by itself, a success says so. */
 const act = async (name: string, args: unknown[]) => {
@@ -115,25 +114,16 @@ async function openBoss(id: string): Promise<void> {
 }
 
 /** Boss points show to members of their job / gang only (the server checks the boss grade). */
-const isMember = (point: BossPoint) =>
-  point.type === "job"
-    ? (getPlayerData("jobs") ?? []).some((m) => m.job === point.owner)
-    : (getPlayerData("gangs") ?? []).some((m) => m.gang === point.owner);
-
 const points = new Points();
-function rebuild(): void {
-  points.clear();
-  for (const point of content.points.values())
-    points.add(`boss:${point.id}`, {
-      coords: { x: point.x, y: point.y, z: point.z },
-      label: Locale("BOSS_PROMPT", point.label),
-      icon: "briefcase",
-      radius: point.radius,
-      canShow: () => isMember(point),
-      onPressed: () => openBoss(point.id),
-    });
-}
-rebuild();
-world.onChange("points", rebuild);
-onPlayerData("jobs", () => points.refresh());
-onPlayerData("gangs", () => points.refresh());
+new RecordObjects(world, "points", readPoint, (id, point) => {
+  points.add(`boss:${id}`, {
+    coords: { x: point.x, y: point.y, z: point.z },
+    label: Locale("BOSS_PROMPT", point.label),
+    icon: "briefcase",
+    radius: point.radius,
+    canShow: () => allows(point.access),
+    onPressed: () => openBoss(id),
+  });
+  return () => points.remove(`boss:${id}`);
+});
+onMembershipChange(() => points.refresh());

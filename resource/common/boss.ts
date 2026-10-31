@@ -1,4 +1,10 @@
-import { num, record, str } from "@aicore-fivem/lib/shared";
+import {
+  num,
+  readAccess,
+  record,
+  str,
+  type AccessRule,
+} from "@aicore-fivem/lib/shared";
 
 /** ai-management's contracts and panel content. No natives. */
 
@@ -23,6 +29,8 @@ export interface BossPoint {
   y: number;
   z: number;
   radius: number;
+  /** Who sees the point: members of `owner` (the boss grade is checked on the server). */
+  access: AccessRule;
 }
 
 export interface BossView {
@@ -41,14 +49,16 @@ export function readPoint(
   const c = record(v.coords);
   const owner = str(v.owner, "", 32);
   if (!owner) return null;
+  const type: GroupType = v.type === "gang" ? "gang" : "job";
   return {
     id,
     label: str(v.label, id, 48),
-    type: v.type === "gang" ? "gang" : "job",
+    type,
     owner,
     x: num(c.x, 0),
     y: num(c.y, 0),
     z: num(c.z, 0),
     radius: num(v.radius, 1.5, 0.5, 10),
+    access: readAccess(type === "gang" ? { gangs: [owner] } : { jobs: [owner] }),
   };
 }
