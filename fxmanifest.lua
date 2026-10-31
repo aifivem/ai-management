@@ -1,6 +1,6 @@
 name 'ai-management'
 author 'TGIANN'
-version '0.1.1' -- x-release-please-version
+version '0.1.2' -- x-release-please-version
 license 'GPL-3.0-only'
 description 'Boss menu: employees and the society account of jobs and gangs'
 repository 'https://github.com/aifivem/ai-management'
