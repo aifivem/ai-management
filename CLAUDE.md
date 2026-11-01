@@ -17,4 +17,4 @@ Boss points of jobs and gangs: members with a boss grade hire the closest player
 
 ## Entry points
 
-- Server `resource/server/index.ts`; client menus and boss points (lib `Points`) `resource/client/index.ts`.
+- Server: boss check `resource/server/boss.ts`, callbacks `server/view.ts`, `server/members.ts`, `server/account.ts`; client menus `resource/client/menu.ts`, boss points (lib `Points`) `client/points.ts`.
