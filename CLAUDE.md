@@ -10,10 +10,12 @@ Boss points of jobs and gangs: members with a boss grade hire the closest player
 - Boss points show only to members of the point's job / gang (`canShow`: lib `allows` on the point's `access`, a rule of its one owner built in `readPoint`; refreshed on `onMembershipChange`); the boss grade is checked on the server. Points come from lib `RecordObjects` (an edited point rebuilds only itself).
 - Grades and members come from lib `online` (`jobGrade` / `gangGrade`, `jobMembers` / `gangMembers`): no export per member. Job / gang grades come from lib `definitions`.
 - The account is the group's `bank` shared account in ai-core (the same ai-banking shows to bosses).
+- Other scripts open the menu without a point (owner decision: tablets and QB / ESX scripts reach it): the caller's own current job / active gang, or a group it holds by name (`ownTarget` ids `@job`, `@gang`, `@job:<name>`); no distance check, the server still requires a boss grade of that group. QB's `qb-bossmenu:client:OpenMenu` / `qb-gangmenu:client:OpenMenu` and ESX's `esx_society:openBossMenu` are answered as local events only while qb-management, qbx_management or esx_society do not run (server-sent ones are not).
 
 ## Contracts
 
 - Callbacks: `resource/common/boss.ts`; panel schema `resource/server/schema.ts`.
+- Client export `OpenBossMenu(type?: "job" | "gang", name?)` (`resource/client/remote.ts`): the boss menu of the player's own group.
 
 ## Entry points
 

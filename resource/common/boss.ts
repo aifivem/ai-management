@@ -41,6 +41,22 @@ export interface BossView {
   members: Array<{ id: number; name: string; grade: number }>;
 }
 
+/**
+ * A boss menu another script opens (a tablet, a target, a QB / ESX event): no point, the caller's current job /
+ * active gang (`@job`, `@gang`) or one they hold by name (`@job:police`). The boss grade is still checked.
+ */
+export const ownTarget = (type: GroupType, name?: string): string =>
+  name ? `@${type}:${name}` : `@${type}`;
+
+/** Reads an `ownTarget` id; null for a point id. */
+export function readOwnTarget(
+  id: string,
+): { type: GroupType; name: string | null } | null {
+  const match = /^@(job|gang)(?::([a-z0-9_]{2,32}))?$/.exec(id);
+  if (!match) return null;
+  return { type: match[1] === "gang" ? "gang" : "job", name: match[2] ?? null };
+}
+
 /** One boss point record (`panel.records` / `world.records`); null without an owner. */
 export function readPoint(
   id: string,
@@ -59,6 +75,8 @@ export function readPoint(
     y: num(c.y, 0),
     z: num(c.z, 0),
     radius: num(v.radius, 1.5, 0.5, 10),
-    access: readAccess(type === "gang" ? { gangs: [owner] } : { jobs: [owner] }),
+    access: readAccess(
+      type === "gang" ? { gangs: [owner] } : { jobs: [owner] },
+    ),
   };
 }

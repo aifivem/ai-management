@@ -5,8 +5,8 @@ import {
   online,
   resourceExport,
 } from "@aicore-fivem/lib/server";
-import { readText } from "@aicore-fivem/lib/shared";
-import { readPoint, type BossPoint } from "common/boss";
+import { readAccess, readText } from "@aicore-fivem/lib/shared";
+import { readOwnTarget, readPoint, type BossPoint } from "common/boss";
 import { schema } from "./schema";
 
 export const core = resourceExport("ai-core");
@@ -30,10 +30,40 @@ interface Boss {
   own: number;
 }
 
-/** The player is at the point and holds a boss grade of its job / gang. */
+/** A menu another script opened (`ownTarget`): the player's current job / active gang, or the named one. */
+function ownPoint(source: number, id: string): BossPoint | null {
+  const own = readOwnTarget(id);
+  if (!own) return null;
+  const owner =
+    own.name ??
+    (own.type === "job"
+      ? core.GetCurrentJob(source)?.job
+      : core.GetActiveGang(source));
+  if (!owner) return null;
+  const definition =
+    own.type === "job" ? definitions.job(owner) : definitions.gang(owner);
+  if (!definition) return null;
+  return {
+    id,
+    label: definition.label,
+    type: own.type,
+    owner,
+    x: 0,
+    y: 0,
+    z: 0,
+    radius: 0,
+    access: readAccess(
+      own.type === "gang" ? { gangs: [owner] } : { jobs: [owner] },
+    ),
+  };
+}
+
+/** The player is at the point (or opened their own group's menu) and holds a boss grade of its job / gang. */
 export function bossAt(source: number, id: string): Boss | null {
-  const point = content.points.get(id);
-  if (!point || !isNear(source, point, point.radius + 2)) return null;
+  const remote = ownPoint(source, id);
+  const point = remote ?? content.points.get(id);
+  if (!point || (!remote && !isNear(source, point, point.radius + 2)))
+    return null;
   const own = gradeOf(source, point);
   if (own === null) return null;
   const grades = gradesOf(point);

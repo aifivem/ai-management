@@ -1230,6 +1230,13 @@ const EVENTS = {
 	member: "ai-management:member",
 	money: "ai-management:money"
 };
+function readOwnTarget(id) {
+	let match = /^@(job|gang)(?::([a-z0-9_]{2,32}))?$/.exec(id);
+	return match ? {
+		type: match[1] === "gang" ? "gang" : "job",
+		name: match[2] ?? null
+	} : null;
+}
 function readPoint(id, v) {
 	let c = record(v.coords), owner = str(v.owner, "", 32);
 	if (!owner) return null;
@@ -1348,9 +1355,27 @@ const schema = {
 		}]
 	}]
 }, core = resourceExport("ai-core"), content = { points: new AdminPanel(schema).records("points", readPoint) }, gradeOf = (source, point) => point.type === "job" ? online.jobGrade(source, point.owner) : online.gangGrade(source, point.owner), gradesOf = (point) => (point.type === "job" ? definitions.job(point.owner)?.grades : definitions.gang(point.owner)?.grades) ?? [];
+function ownPoint(source, id) {
+	let own = readOwnTarget(id);
+	if (!own) return null;
+	let owner = own.name ?? (own.type === "job" ? core.GetCurrentJob(source)?.job : core.GetActiveGang(source));
+	if (!owner) return null;
+	let definition = own.type === "job" ? definitions.job(owner) : definitions.gang(owner);
+	return definition ? {
+		id,
+		label: definition.label,
+		type: own.type,
+		owner,
+		x: 0,
+		y: 0,
+		z: 0,
+		radius: 0,
+		access: readAccess(own.type === "gang" ? { gangs: [owner] } : { jobs: [owner] })
+	} : null;
+}
 function bossAt(source, id) {
-	let point = content.points.get(id);
-	if (!point || !isNear(source, point, point.radius + 2)) return null;
+	let remote = ownPoint(source, id), point = remote ?? content.points.get(id);
+	if (!point || !remote && !isNear(source, point, point.radius + 2)) return null;
 	let own = gradeOf(source, point);
 	if (own === null) return null;
 	let grades = gradesOf(point);
