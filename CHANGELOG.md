@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/aifivem/ai-management/compare/v0.1.3...v0.2.0) (2026-11-01)
+
+
+### New Features
+
+* **management:** open the boss menu from other scripts and QB / ESX boss menu events ([c1e8d68](https://github.com/aifivem/ai-management/commit/c1e8d68936f240d268fe9d997f17bf5c95592064))
+
 ## [0.1.3](https://github.com/aifivem/ai-management/compare/v0.1.2...v0.1.3) (2026-11-01)
 
 
