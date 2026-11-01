@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/aifivem/ai-management/compare/v0.1.2...v0.1.3) (2026-11-01)
+
+
+### Code Refactoring
+
+* feature folders, side entries that only import, panel schema per tab ([9bd7012](https://github.com/aifivem/ai-management/commit/9bd70123e2b23e4457b3a1b3f892f75334ae4818))
+
 ## [0.1.2](https://github.com/aifivem/ai-management/compare/v0.1.1...v0.1.2) (2026-10-31)
 
 
