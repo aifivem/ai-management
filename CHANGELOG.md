@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.2](https://github.com/aifivem/ai-management/compare/v0.2.1...v0.2.2) (2026-11-02)
+
+
+### Documentation
+
+* install from the release zip ([549c17d](https://github.com/aifivem/ai-management/commit/549c17da339b0cfc7bec9c6e6165be748c0cfc44))
+
+
+### Miscellaneous Chores
+
+* build files are no longer in git, the release zip carries them ([4b1f9d0](https://github.com/aifivem/ai-management/commit/4b1f9d0f226fd459fbf5ac62e9e7a5752b84be22))
+
 ## [0.2.1](https://github.com/aifivem/ai-management/compare/v0.2.0...v0.2.1) (2026-11-02)
 
 
