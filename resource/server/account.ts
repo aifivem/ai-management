@@ -1,6 +1,6 @@
-import { aiLog, money, onClientCallback } from "@aicore-fivem/lib/server";
-import { fail, readInt } from "@aicore-fivem/lib/shared";
-import type { MoneyRef } from "@aicore-fivem/shared";
+import { aiLog, money, onClientCallback } from "@aifivem/lib/server";
+import { fail, readInt } from "@aifivem/lib/shared";
+import type { MoneyRef } from "@aifivem/shared";
 import { EVENTS } from "common/boss";
 import { bossAt, pointArg } from "./boss";
 

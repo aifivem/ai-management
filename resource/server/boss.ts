@@ -4,8 +4,8 @@ import {
   isNear,
   online,
   resourceExport,
-} from "@aicore-fivem/lib/server";
-import { readAccess, readText } from "@aicore-fivem/lib/shared";
+} from "@aifivem/lib/server";
+import { readAccess, readText } from "@aifivem/lib/shared";
 import { readOwnTarget, readPoint, type BossPoint } from "common/boss";
 import { schema } from "./schema";
 

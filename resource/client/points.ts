@@ -3,8 +3,8 @@ import {
   allows,
   onMembershipChange,
   Points,
-} from "@aicore-fivem/lib/client";
-import { RecordObjects } from "@aicore-fivem/lib/shared";
+} from "@aifivem/lib/client";
+import { RecordObjects } from "@aifivem/lib/shared";
 import { Locale } from "common";
 import { readPoint } from "common/boss";
 import { openBoss } from "./menu";
