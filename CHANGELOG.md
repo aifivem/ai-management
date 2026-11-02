@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/aifivem/ai-management/compare/v0.2.0...v0.2.1) (2026-11-02)
+
+
+### Code Refactoring
+
+* import the shared packages from [@aifivem](https://github.com/aifivem) ([15d12e8](https://github.com/aifivem/ai-management/commit/15d12e87721fc254d957374cc8f743e83446dd24))
+
 ## [0.2.0](https://github.com/aifivem/ai-management/compare/v0.1.3...v0.2.0) (2026-11-01)
 
 
